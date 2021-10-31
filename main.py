@@ -45,9 +45,10 @@ def scrape(category, city):
         print(f'Пролистываем до конца...')
         while True:
             try:
+
                 scroll_button = driver.find_element(By.XPATH, f"//div[contains(text(), 'Показать ещё')]")
                 driver.execute_script("arguments[0].click();", scroll_button)
-                driver.implicitly_wait(5)
+                driver.implicitly_wait(3)
             except (NoSuchElementException, StaleElementReferenceException):
                 break
 
@@ -59,6 +60,7 @@ def scrape(category, city):
             id = url.split('/')[-2]
             if id not in products:
                 stats = {}
+                driver.implicitly_wait(1)
                 p_tags = product.find_elements(By.TAG_NAME, 'p')
                 if len(p_tags) == 3:
                     stats['title'] = p_tags[0].text
@@ -78,7 +80,7 @@ def scrape(category, city):
                 stats['url'] = url
                 stats['city'] = city
                 products[id] = stats
-                print(f'  ...продукт {id} добавлен')
+                print(f"  ...продукт {id} - {stats['title']} добавлен")
         print(f'Получено {len(products)} продуктов из категории {category} в регионе {city}')
         return products
 
@@ -109,11 +111,11 @@ if __name__ == '__main__':
     spb_location = 'Санкт-Петербург и Ленинградская область'
     msc_location = 'Москва и Московская область'
 
-    products_spb = scrape(category, spb_location)
+    # products_spb = scrape(category, spb_location)
     products_msc = scrape(category, msc_location)
 
     print('Сохраняем в файлы')
-    fill_cbv(category, spb_location, products_spb)
+    # fill_cbv(category, spb_location, products_spb)
     fill_cbv(category, msc_location, products_msc)
 
     print('Done!')
