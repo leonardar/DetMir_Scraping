@@ -12,7 +12,7 @@ def scrape(category, city):
     options = webdriver.ChromeOptions()
     options.add_argument('user-agent=Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:84.0) Gecko/20100101 Firefox/84.0')
     options.add_argument('--disable-blink-features=AutomationControlled')
-    # options.headless = True
+    options.headless = True
     options.add_argument('window-size=1920,1080')
     service = Service("./chromedriver")
     driver = webdriver.Chrome(
