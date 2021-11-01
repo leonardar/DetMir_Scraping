@@ -48,7 +48,7 @@ def scrape(category, city):
 
                 scroll_button = driver.find_element(By.XPATH, f"//div[contains(text(), 'Показать ещё')]")
                 driver.execute_script("arguments[0].click();", scroll_button)
-                driver.implicitly_wait(7)
+                driver.implicitly_wait(10)
             except (NoSuchElementException, StaleElementReferenceException):
                 break
 
@@ -108,14 +108,14 @@ def fill_csv(category, location, products):
 
 if __name__ == '__main__':
     category = 'lego'
-    spb_location = 'Санкт-Петербург и Ленинградская область'
+    # spb_location = 'Санкт-Петербург и Ленинградская область'
     msc_location = 'Москва и Московская область'
 
-    products_spb = scrape(category, spb_location)
+    # products_spb = scrape(category, spb_location)
     products_msc = scrape(category, msc_location)
 
     print('Сохраняем в файлы')
-    fill_csv(category, spb_location, products_spb)
+    # fill_csv(category, spb_location, products_spb)
     fill_csv(category, msc_location, products_msc)
 
     print('Done!')
