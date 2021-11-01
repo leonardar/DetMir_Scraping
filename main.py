@@ -25,7 +25,7 @@ def scrape(category, city):
 
         print(f'Выбираем город {city}')
         list_button = driver.find_element(By.XPATH, "//span[contains(text(), 'другой')]")
-        wait = WebDriverWait(driver, 5)
+        wait = WebDriverWait(driver, 3)
         wait.until(EC.element_to_be_clickable(list_button)).click()
         city_button = driver.find_element(By.XPATH, f"//span[contains(text(), '{city}')]")
         driver.execute_script("arguments[0].click();", city_button)
@@ -98,7 +98,7 @@ def scrape(category, city):
         driver.quit()
 
 
-def fill_cbv(category, location, products):
+def fill_csv(category, location, products):
     with open(f"{category}_{location}.csv", mode="w", encoding='utf-8') as w_file:
         file_writer = csv.writer(w_file, delimiter=",", lineterminator="\r")
         file_writer.writerow(["id", "title", "price", "promo_price", "url"])
@@ -111,11 +111,11 @@ if __name__ == '__main__':
     spb_location = 'Санкт-Петербург и Ленинградская область'
     msc_location = 'Москва и Московская область'
 
-    # products_spb = scrape(category, spb_location)
+    products_spb = scrape(category, spb_location)
     products_msc = scrape(category, msc_location)
 
     print('Сохраняем в файлы')
-    # fill_cbv(category, spb_location, products_spb)
-    fill_cbv(category, msc_location, products_msc)
+    fill_csv(category, spb_location, products_spb)
+    fill_csv(category, msc_location, products_msc)
 
     print('Done!')
