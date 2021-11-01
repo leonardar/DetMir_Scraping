@@ -1,4 +1,5 @@
 import sys
+import platform
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -8,13 +9,22 @@ from selenium.common.exceptions import TimeoutException, NoSuchElementException,
 import csv
 
 
+def get_system_prefix():
+    if platform.system() == 'Linux':
+        return 'linux'
+    elif platform.system() == 'Darwin':
+        return 'mac'
+    return 'exe'
+
+
 def scrape(category, city):
     options = webdriver.ChromeOptions()
     options.add_argument('user-agent=Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:84.0) Gecko/20100101 Firefox/84.0')
     options.add_argument('--disable-blink-features=AutomationControlled')
-    # options.headless = True
+    options.headless = True
     options.add_argument('window-size=1920,1080')
-    service = Service("./chromedriver")
+    prefix = get_system_prefix()
+    service = Service(f'./chromedriver.{prefix}')
     driver = webdriver.Chrome(
         service=service,
         options=options
@@ -27,8 +37,9 @@ def scrape(category, city):
         list_button = driver.find_element(By.XPATH, "//span[contains(text(), 'другой')]")
         wait = WebDriverWait(driver, 3)
         wait.until(EC.element_to_be_clickable(list_button)).click()
-        city_button = driver.find_element(By.XPATH, f"//span[contains(text(), '{city}')]")
-        driver.execute_script("arguments[0].click();", city_button)
+
+        city_buttons = driver.find_elements(By.XPATH, f"//span[contains(text(), '{city}')]")
+        driver.execute_script("arguments[0].click();", city_buttons[-1])
 
         print('Выбираем категорию игрушки')
         shop_category_button = driver.find_element(By.XPATH,
@@ -45,10 +56,9 @@ def scrape(category, city):
         print(f'Пролистываем до конца...')
         while True:
             try:
-
                 scroll_button = driver.find_element(By.XPATH, f"//div[contains(text(), 'Показать ещё')]")
                 driver.execute_script("arguments[0].click();", scroll_button)
-                driver.implicitly_wait(10)
+                driver.implicitly_wait(3)
             except (NoSuchElementException, StaleElementReferenceException):
                 break
 
@@ -99,7 +109,9 @@ def scrape(category, city):
 
 
 def fill_csv(category, location, products):
-    with open(f"{category}_{location}.csv", mode="w", encoding='utf-8') as w_file:
+    file_name = f"{category}_{location}.csv"
+    print(f'Сохраняем в {file_name}')
+    with open(file_name, mode="w", encoding='utf-8') as w_file:
         file_writer = csv.writer(w_file, delimiter=",", lineterminator="\r")
         file_writer.writerow(["id", "title", "price", "promo_price", "url"])
         for key, value in products.items():
@@ -108,14 +120,13 @@ def fill_csv(category, location, products):
 
 if __name__ == '__main__':
     category = 'lego'
-    spb_location = 'Санкт-Петербург и Ленинградская область'
-    msc_location = 'Москва и Московская область'
 
-    products_spb = scrape(category, spb_location)
-    products_msc = scrape(category, msc_location)
+    location = 'Санкт-Петербург и Ленинградская область'
+    products = scrape(category, location)
+    fill_csv(category, location, products)
 
-    print('Сохраняем в файлы')
-    fill_csv(category, spb_location, products_spb)
-    fill_csv(category, msc_location, products_msc)
+    location = 'Москва и Московская область'
+    products = scrape(category, location)
+    fill_csv(category, location, products)
 
     print('Done!')
