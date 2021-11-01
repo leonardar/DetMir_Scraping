@@ -108,14 +108,14 @@ def fill_csv(category, location, products):
 
 if __name__ == '__main__':
     category = 'lego'
-    # spb_location = 'Санкт-Петербург и Ленинградская область'
+    spb_location = 'Санкт-Петербург и Ленинградская область'
     msc_location = 'Москва и Московская область'
 
-    # products_spb = scrape(category, spb_location)
+    products_spb = scrape(category, spb_location)
     products_msc = scrape(category, msc_location)
 
     print('Сохраняем в файлы')
-    # fill_csv(category, spb_location, products_spb)
+    fill_csv(category, spb_location, products_spb)
     fill_csv(category, msc_location, products_msc)
 
     print('Done!')
