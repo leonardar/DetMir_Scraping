@@ -1,6 +1,5 @@
 import time
 import platform
-from selenium.webdriver.support.wait import WebDriverWait
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service
@@ -16,6 +15,7 @@ def get_system_prefix():
     return 'exe'
 
 
+# Функция fill_csv была вынесена в начало, тк запись в файлы теперь происходит в функции scrape
 def fill_csv(category, location, products):
     with open(f"{category}_{location}.csv", mode="w", encoding='utf-8') as w_file:
         file_writer = csv.writer(w_file, delimiter=",", lineterminator="\r")
@@ -41,21 +41,21 @@ def scrape(category, city):
     try:
         driver.get(f"https://www.detmir.ru/catalog/index/name/{category}/")
         driver.implicitly_wait(5)
-
+        # город выбирается нажатием на кнопку выбора региона, что надёжнее:
+        # окно с вариантом подтвердить город или выбрать другой появляется не всегда
         print(f'Выбираем город {city}')
-        region_button = driver.find_element(By.XPATH,
-                                            "//*[@id='app-container']/div[2]/header/div/div[2]/div/div/div[1]/ul/li[2]/div/div/div[1]/div/span")
+        region_button = driver.find_element(By.XPATH, "//*[@id='app-container']/div[2]/header/div/div[2]/div/div/div[1]/ul/li[2]/div/div/div[1]/div/span")
         driver.execute_script("arguments[0].click();", region_button)
         time.sleep(5)
-
+        # выбор города теперь не по индексу (что ненадёжно), а перебором элементов с названием - те которые не нажимаются не кнопки, а нажатие
+        # кнопки с городом влечёт закрытие модального окна, организована проверка видно ли оно пользователю - если нет, двигаемся дальше,город выбран
         city_buttons = driver.find_elements(By.XPATH, f"//span[contains(text(), '{city}')]")
 
         print('Нажимаем на кнопку и проверяем наличие модального окна')
         try:
             for elem in city_buttons:
                 driver.execute_script("arguments[0].click();", elem)
-                modal_close_button = driver.find_element(By.XPATH,
-                                                         "//*[@id='tw']/div[1]/div/div/div[2]/div/button")  # кнопка "закрыть модальное окно"
+                modal_close_button = driver.find_element(By.XPATH, "//*[@id='tw']/div[1]/div/div/div[2]/div/button")  # кнопка "закрыть модальное окно"
                 if not modal_close_button.is_displayed():  # если кнопка не видна пользователю
                     break
         except (StaleElementReferenceException, NoSuchElementException):
@@ -76,6 +76,7 @@ def scrape(category, city):
         products_list = driver.find_elements(By.XPATH, '//a[contains(@href, "https://www.detmir.ru/product/index/id")]')
 
         for product in products_list:
+            # добавлен try/except, а также блок else с continue, если возникнет проблема с элементом - программа не падает, переходит к следующему
             try:
                 url = product.get_attribute('href')
                 id = url.split('/')[-2]
@@ -103,7 +104,7 @@ def scrape(category, city):
                     stats['city'] = city
                     products[id] = stats
                     print(f"  ...продукт {id} - {stats['title']} добавлен")
-            except (NoSuchElementException, TimeoutException):
+            except (NoSuchElementException, TimeoutException): #перехватываем ошибки, которые иногда происходили при запусках скрипта
                 pass
 
     except (ConnectionError, ConnectionRefusedError) as ex:
@@ -119,6 +120,7 @@ def scrape(category, city):
         driver.quit()
         print(f'Получено {len(products)} продуктов из категории {category} в регионе {city}')
         print('Записываем в файл')
+        #даже в случае исключения записываем данные, которые удалось собрать
         fill_csv(category, city, products)
 
 
