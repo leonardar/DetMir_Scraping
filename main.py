@@ -1,6 +1,6 @@
-import sys
 import time
 import platform
+from selenium.webdriver.support.wait import WebDriverWait
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service
@@ -30,7 +30,8 @@ def scrape(category, city):
     options.add_argument('--disable-blink-features=AutomationControlled')
     options.headless = True
     options.add_argument('window-size=1920,1080')
-    service = Service("./chromedriver")
+    prefix = get_system_prefix()
+    service = Service(f'./chromedriver.{prefix}')
     driver = webdriver.Chrome(
         service=service,
         options=options
@@ -62,7 +63,7 @@ def scrape(category, city):
 
         time.sleep(5)
 
-        print(f'Пролистываем до конца...')
+        print('Пролистываем до конца...')
         while True:
             try:
                 scroll_button = driver.find_element(By.XPATH, f"//div[contains(text(), 'Показать ещё')]")
